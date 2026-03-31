@@ -21,6 +21,7 @@ FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /app/bin/cpp-backend-template .
 COPY --from=builder /usr/lib/* /usr/lib/
+COPY templates/ ./templates/
 
 EXPOSE ${PORT}
 

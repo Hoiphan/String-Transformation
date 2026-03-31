@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Levenshtein API Tester</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; padding: 50px; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+        h2 { margin-top: 0; color: #333; }
+        label { font-weight: bold; display: block; margin-top: 15px; }
+        input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { margin-top: 20px; width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        button:hover { background-color: #0056b3; }
+        #result { margin-top: 20px; padding: 15px; background-color: #e9ecef; border-radius: 4px; display: none; line-height: 1.5; }
+        .error { color: #dc3545; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>String Distance Calculator</h2>
+        <label>Source String:</label>
+        <input type="text" id="source" placeholder="e.g., kitten">
+        
+        <label>Target String:</label>
+        <input type="text" id="target" placeholder="e.g., sitting">
+        
+        <button onclick="calculate()">Calculate</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function calculate() {
+            const source = document.getElementById('source').value;
+            const target = document.getElementById('target').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = 'Calculating...';
+
+            try {
+                // Call your C++ backend!
+                const response = await fetch('/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ source, target })
+                });
+
+                // Handle the Exception you wrote earlier!
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `<span class="error">Error: ${errorText}</span>`;
+                    return;
+                }
+
+                // Parse the 200 OK JSON and display it
+                const data = await response.json();
+                let html = `<strong>Total Actions:</strong> ${data.actions_num}<br><br><strong>Steps:</strong><ol>`;
+                data.actions.forEach(action => {
+                    html += `<li>${action}</li>`;
+                });
+                html += `</ol>`;
+                resultDiv.innerHTML = html;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">Network error. Is the server running?</span>`;
+            }
+        }
+    </script>
+</body>
+</html>

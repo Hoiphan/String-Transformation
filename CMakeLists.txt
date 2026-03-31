@@ -21,3 +21,25 @@ find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
 
 add_subdirectory(src)
+
+
+# --- TESTING CONFIGURATION ---
+
+# Turn on testing in CMake
+enable_testing()
+
+# Ask vcpkg to find Google Test
+find_package(GTest CONFIG REQUIRED)
+
+# Create a brand new executable just for running tests.
+# Notice we MUST include Utils.cpp so the test knows how to do the math!
+add_executable(backend_tests 
+    tests/algorithm_test.cpp 
+    src/utils/Utils.cpp 
+)
+
+# Link GTest to your test executable
+target_link_libraries(backend_tests PRIVATE GTest::gtest GTest::gtest_main)
+
+# Register the test executable with CMake's test runner
+add_test(NAME BackendTests COMMAND backend_tests)
