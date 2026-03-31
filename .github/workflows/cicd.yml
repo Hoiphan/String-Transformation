@@ -28,43 +28,43 @@ jobs:
           # This tags your image as: yourusername/cpp-backend:latest
           tags: ${{ secrets.DOCKER_USERNAME }}/cpp-backend:latest
 
-deploy:
-  needs: build-and-push
-  runs-on: ubuntu-latest
-  steps:
-    # 1. We MUST checkout the code again here so the runner can see your docker-compose.prod.yml file
-    - name: Checkout repository
-      uses: actions/checkout@v3
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      # 1. We MUST checkout the code again here so the runner can see your docker-compose.prod.yml file
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    # 2. Securely copy the Compose file from GitHub to your Azure Server
-    - name: Copy Compose file to Azure VM
-      uses: appleboy/scp-action@v0.1.4
-      with:
-        host: ${{ secrets.AZURE_HOST }}
-        username: ${{ secrets.AZURE_USER }}
-        key: ${{ secrets.AZURE_SSH_KEY }}
-        source: "docker-compose.prod.yml"
-        target: "/home/${{ secrets.AZURE_USER }}/app"
+      # 2. Securely copy the Compose file from GitHub to your Azure Server
+      - name: Copy Compose file to Azure VM
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.AZURE_HOST }}
+          username: ${{ secrets.AZURE_USER }}
+          key: ${{ secrets.AZURE_SSH_KEY }}
+          source: "docker-compose.prod.yml"
+          target: "/home/${{ secrets.AZURE_USER }}/app"
 
-    # 3. SSH into the server and launch the app
-    - name: Deploy with Docker Compose
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.AZURE_HOST }}
-        username: ${{ secrets.AZURE_USER }}
-        key: ${{ secrets.AZURE_SSH_KEY }}
-        script: |
-          # Go to the folder where we just copied the file
-          cd /home/${{ secrets.AZURE_USER }}/app
+      # 3. SSH into the server and launch the app
+      - name: Deploy with Docker Compose
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.AZURE_HOST }}
+          username: ${{ secrets.AZURE_USER }}
+          key: ${{ secrets.AZURE_SSH_KEY }}
+          script: |
+            # Go to the folder where we just copied the file
+            cd /home/${{ secrets.AZURE_USER }}/app
 
-          # Create a temporary .env file so Compose knows your Docker Hub username
-          echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" > .env
+            # Create a temporary .env file so Compose knows your Docker Hub username
+            echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" > .env
 
-          # Download the absolute newest version of your C++ image from Docker Hub
-          docker compose -f docker-compose.prod.yml pull
+            # Download the absolute newest version of your C++ image from Docker Hub
+            docker compose -f docker-compose.prod.yml pull
 
-          # Spin up the new container (and automatically shut down the old one!)
-          docker compose -f docker-compose.prod.yml up -d
+            # Spin up the new container (and automatically shut down the old one!)
+            docker compose -f docker-compose.prod.yml up -d
 
-          # Wipe old, unused Docker images so your 30GB Azure hard drive doesn't fill up
-          docker image prune -af
+            # Wipe old, unused Docker images so your 30GB Azure hard drive doesn't fill up
+            docker image prune -af
