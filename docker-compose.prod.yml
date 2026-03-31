@@ -1,0 +1,11 @@
+services:
+  backend:
+    container_name: cpp-backend
+    # We use a variable here so GitHub Actions can inject your Docker Hub username
+    image: ${DOCKER_USERNAME}/cpp-backend:latest
+    restart: unless-stopped
+    ports:
+      # This is the magic! The Azure VM's Port 80 traffic goes into the container's Port 8000
+      - "80:8000"
+    environment:
+      - PORT=8000
